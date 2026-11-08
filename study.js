@@ -13,6 +13,22 @@ function readTotals() {
     return totals;
 }
 
+function readStartTime() {
+    // if start.txt exists: read it, parse it, and return the number
+    // otherwise: return null
+    let startTime = null;
+    if (fs.existsSync(startFilePath)) {
+        startTime = Number(fs.readFileSync(startFilePath, "utf8"));
+    }
+    return startTime;
+}
+
+function minutesSince(startTime) {
+    // calculate the number of minutes since the given startTime
+    const ms = Date.now() - startTime;
+    return Math.floor(ms / 60000);
+}
+
 let command = process.argv[2];
 if (command === undefined) { 
     if (fs.existsSync(startFilePath)) {
@@ -34,9 +50,7 @@ if (command === "start" && !fs.existsSync(startFilePath)) {
     const stopTime = Date.now();
     const dateTime = new Date(stopTime).toLocaleTimeString();
     console.log("Stopped the study tracker at " + dateTime + ".");
-    const startTime = Number(fs.readFileSync(startFilePath, "utf8"));
-    const ms = stopTime - startTime;
-    const minutes = Math.floor(ms / 60000);
+    const minutes = minutesSince(readStartTime());
     const totals = readTotals();
     totals[today] = (totals[today] || 0) + minutes;
     fs.writeFileSync(totalsFilePath, JSON.stringify(totals, null, 2));
@@ -49,7 +63,7 @@ if (command === "start" && !fs.existsSync(startFilePath)) {
     const totals = readTotals();
     const today = new Date().toDateString();
     const totalMinutes = totals[today] || 0;
-    const currentSessionMinutes = fs.existsSync(startFilePath) ? Math.floor((Date.now() - Number(fs.readFileSync(startFilePath, "utf8"))) / 60000) : 0;
+    const currentSessionMinutes = fs.existsSync(startFilePath) ? minutesSince(readStartTime()) : 0;
     console.log("Total study time for " + today + ": " + totalMinutes + " minutes (+" + currentSessionMinutes + " running).");
    
 } else if (command === "week") {
