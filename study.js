@@ -37,6 +37,36 @@ if (command === "start" && !fs.existsSync(startFilePath)) {
     fs.unlinkSync(startFilePath); 
 } else if (command === "stop") {
     console.log("No study session to stop. Please start a session first.");
+} else if (command === "today") {
+    if (fs.existsSync(totalsFilePath)) {
+        const totals = JSON.parse(fs.readFileSync(totalsFilePath, "utf8"));
+        const today = new Date().toDateString();
+        const totalMinutes = totals[today] || 0;
+        const currentSessionMinutes = fs.existsSync(startFilePath) ? Math.floor((Date.now() - Number(fs.readFileSync(startFilePath, "utf8"))) / 60000) : 0;
+        console.log("Total study time for " + today + ": " + totalMinutes + " minutes (+" + currentSessionMinutes + " running).");
+    } else {
+        console.log("No study sessions recorded yet.");
+    }
+} else if (command === "week") {
+    if (fs.existsSync(totalsFilePath)) {
+        const totals = JSON.parse(fs.readFileSync(totalsFilePath, "utf8"));
+        const week = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            const dateString = date.toDateString();
+            week.push({ date: dateString, minutes: totals[dateString] || 0 });
+        }
+        console.log("Study time for the past week:");
+        let minutesThisWeek = 0;
+        week.forEach(({ date, minutes }) => {
+            minutesThisWeek += minutes;
+            console.log(`  ${date}: ${minutes} minutes`);
+        });
+        console.log("\nTotal study time for the week: " + minutesThisWeek + " minutes.\n");
+    } else {
+        console.log("No study sessions recorded yet.");
+    }
 } else {
-    console.log("Unknown command. Please use 'start' or 'stop'.");
+    console.log("Unknown command. Please use 'start', 'stop', 'today' or 'week'.");
 }
