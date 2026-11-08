@@ -39,13 +39,26 @@ function getHours(minutes) {
 function formatMinutes(minutes) {
     // format minutes as "X hours, Y minutes"
     const { hours, remainingMinutes } = getHours(minutes);
-    if (hours === 1) {
-        return `1 hour, ${remainingMinutes} minutes`;
-    } else if (hours === 0) {
-        return `${remainingMinutes} minutes`;
-    } else {
-        return `${hours} hours, ${remainingMinutes} minutes`;
+    let message = "";
+    if (hours === 0 && remainingMinutes === 0) {
+        message = "0 minutes";
     }
+    if (hours > 0) {
+        if (hours === 1) {
+            message = `1 hour`; 
+        } else {
+            message = `${hours} hours`;
+        }       
+    }
+   if (remainingMinutes > 0) {
+    const word = remainingMinutes === 1 ? "minute" : "minutes";
+    if (message.length > 0) {
+        message += `, ${remainingMinutes} ${word}`;
+    } else {
+        message = `${remainingMinutes} ${word}`;
+    }
+}
+    return message;
 }
 
 let command = process.argv[2];
@@ -83,7 +96,7 @@ if (command === "start" && !fs.existsSync(startFilePath)) {
     const today = new Date().toDateString();
     const totalMinutes = totals[today] || 0;
     const currentSessionMinutes = fs.existsSync(startFilePath) ? minutesSince(readStartTime()) : 0;
-    console.log(`Total study time for ${today}: ${formatMinutes(totalMinutes)} (+${currentSessionMinutes} running).`);
+    console.log(`Total study time for ${today}: ${formatMinutes(totalMinutes)} (+ ${formatMinutes(currentSessionMinutes)} running).`);
    
 } else if (command === "week") {
     const totals = readTotals();
