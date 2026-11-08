@@ -29,6 +29,25 @@ function minutesSince(startTime) {
     return Math.floor(ms / 60000);
 }
 
+function getHours(minutes) {
+    // convert minutes to hours and remaining minutes
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return { hours, remainingMinutes };
+}
+
+function formatMinutes(minutes) {
+    // format minutes as "X hours, Y minutes"
+    const { hours, remainingMinutes } = getHours(minutes);
+    if (hours === 1) {
+        return `1 hour, ${remainingMinutes} minutes`;
+    } else if (hours === 0) {
+        return `${remainingMinutes} minutes`;
+    } else {
+        return `${hours} hours, ${remainingMinutes} minutes`;
+    }
+}
+
 let command = process.argv[2];
 if (command === undefined) { 
     if (fs.existsSync(startFilePath)) {
@@ -54,8 +73,8 @@ if (command === "start" && !fs.existsSync(startFilePath)) {
     const totals = readTotals();
     totals[today] = (totals[today] || 0) + minutes;
     fs.writeFileSync(totalsFilePath, JSON.stringify(totals, null, 2));
-    console.log(`You studied for ${minutes} minutes.\n`);
-    console.log("Total study time for " + today + ": " + totals[today] + " minutes.");
+    console.log(`You studied for ${formatMinutes(minutes)}.\n`);
+    console.log(`Total study time for ${today}: ${formatMinutes(totals[today])}.`);
     fs.unlinkSync(startFilePath); 
 } else if (command === "stop") {
     console.log("No study session to stop. Please start a session first.");
@@ -64,7 +83,7 @@ if (command === "start" && !fs.existsSync(startFilePath)) {
     const today = new Date().toDateString();
     const totalMinutes = totals[today] || 0;
     const currentSessionMinutes = fs.existsSync(startFilePath) ? minutesSince(readStartTime()) : 0;
-    console.log("Total study time for " + today + ": " + totalMinutes + " minutes (+" + currentSessionMinutes + " running).");
+    console.log(`Total study time for ${today}: ${formatMinutes(totalMinutes)} (+${currentSessionMinutes} running).`);
    
 } else if (command === "week") {
     const totals = readTotals();
@@ -79,9 +98,9 @@ if (command === "start" && !fs.existsSync(startFilePath)) {
     let minutesThisWeek = 0;
     week.forEach(({ date, minutes }) => {
         minutesThisWeek += minutes;
-        console.log(`  ${date}: ${minutes} minutes`);
+        console.log(`  ${date}: ${formatMinutes(minutes)}.`);
     });
-    console.log("\nTotal study time for the week: " + minutesThisWeek + " minutes.\n");
+    console.log("\nTotal study time for the week: " + formatMinutes(minutesThisWeek) + ".");
 } else {
     console.log("Unknown command. Please use 'start', 'stop', 'today' or 'week'.");
 }
